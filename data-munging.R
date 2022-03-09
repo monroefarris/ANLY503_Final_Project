@@ -190,7 +190,8 @@ for (year in years) {
            SeatingPosition = ifelse(SeatingPosition %in% c(98, 99), NA, SeatingPosition),
            PoliceReportedAlcoholInvolvement = ifelse(PoliceReportedAlcoholInvolvement %in% c(8, 9), NA, PoliceReportedAlcoholInvolvement),
            PoliceReportedDrugInvolvement = ifelse(PoliceReportedDrugInvolvement %in% c(8, 9), NA, PoliceReportedDrugInvolvement)
-     )
+     ) %>%
+    mutate(Sex = ifelse(Age == 1, 'Male', 'Female'))
   cleaned.person.df[is.na(cleaned.person.df)] <- ""
   
   print(paste0('Cleaned person data for ', year))
@@ -212,7 +213,19 @@ for (year in years) {
   
   combined.df <- cleaned.person.df %>%
     left_join(cleaned.vehicle.df, by = c('CaseId', 'VehicleId')) %>%
-    left_join(cleaned.accident.df, by = 'CaseId')
+    left_join(cleaned.accident.df, by = 'CaseId') %>%
+    mutate(RoadwaySurfaceCondition = ifelse(rep(year <= 2009, nrow(.)), RoadwaySurfaceCondition.y, RoadwaySurfaceCondition.x),
+           RoadProfile = ifelse(rep(year <= 2009, nrow(.)), RoadProfile.y, RoadProfile.x),
+           RoadwayAlignment = ifelse(rep(year <= 2009, nrow(.)), RoadwayAlignment.y, RoadwayAlignment.x),
+           PostedSpeedLimit = ifelse(rep(year <= 2009, nrow(.)), PostedSpeedLimit.y, PostedSpeedLimit.x),
+           TotalLanesInRoadway = ifelse(rep(year <= 2009, nrow(.)), TotalLanesInRoadway.y, TotalLanesInRoadway.x)) %>%
+    rename(Year = Year.x) %>%
+    select(-RoadwaySurfaceCondition.y, -RoadwaySurfaceCondition.x, 
+           -RoadProfile.y, -RoadProfile.x, 
+           -RoadwayAlignment.y, -RoadwayAlignment.x, 
+           -PostedSpeedLimit.y, -PostedSpeedLimit.x,
+           -TotalLanesInRoadway.y, -TotalLanesInRoadway.x, -Year.y)
+  combined.df[is.na(combined.df)] <- ""
   
   print(paste0('Combined data for ', year))
   
