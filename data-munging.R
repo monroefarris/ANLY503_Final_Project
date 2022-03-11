@@ -7,6 +7,19 @@ pacman::p_load(tidyverse, gridExtra)
 
 # Clean Accident Data By Year --------------------------------------------------
 
+states.fars <- c("Alabama", "Alaska", "American Samoa", "Arizona", "Arkansas", 
+                 "California", "", "Colorado", "Connecticut", "Delaware", 
+                 "District of Columbia", "Florida", "Georgia", "Guam", 
+                 "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", 
+                 "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", 
+                 "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", 
+                 "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", 
+                 "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", 
+                 "Oregon", "Pennsylvania", "Puerto Rico", "Rhode Island", 
+                 "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", 
+                 "Vermont", "Virginia", "Virgin Islands (Since 2004)", "Washington", 
+                 "West Virginia", "Wisconsin", "Wyoming")
+
 years <- seq(1975, 2019, 1)
 for (year in years) {
   accident.df <- read.csv(paste0('./data/', year, '/accident.csv'))
@@ -54,7 +67,6 @@ for (year in years) {
            RoadwaySurfaceCondition = SUR_COND
      ) %>%
     mutate(
-      State = as.factor(StateId),
       RouteSigning = as.factor(RouteSigningId),
       LandUse = as.factor(LandUseId),
       MannerOfCollision = as.factor(MannerOfCollisionId),
@@ -62,6 +74,7 @@ for (year in years) {
       WeatherCondition = as.factor(WeatherConditionId),
     ) %>%
     mutate(
+      State = states.fars[StateId],
       Month = ifelse(Month == 99, NA, Month),
       Day = ifelse(Day == 99, NA, Day),
       DayOfTheWeek = ifelse(DayOfTheWeek == 9, NA, DayOfTheWeek),
@@ -81,7 +94,11 @@ for (year in years) {
       RoadwayAlignment = ifelse(RoadwayAlignment == 9, NA, RoadwayAlignment),
       RoadProfile = ifelse(RoadProfile  == 9, NA, RoadProfile),
       RoadwaySurfaceCondition = ifelse(RoadwaySurfaceCondition %in% c(8, 9), NA, RoadwaySurfaceCondition)
-    )
+    ) %>%
+    filter(State %in% state.name) %>%
+    mutate(StateAbbv = state.abb[match(State, state.name)]) %>%
+    select(-StateId)
+  
   cleaned.accident.df[is.na(cleaned.accident.df)] <- ""
   
   print(paste0('Cleaned accident data for ', year))
