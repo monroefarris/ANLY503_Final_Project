@@ -3,7 +3,7 @@ if (!require("pacman")) {
   install.packages("pacman")
 }
 
-pacman::p_load(tidyverse, gridExtra)
+pacman::p_load(tidyverse, lubridate)
 
 # Clean Accident Data By Year --------------------------------------------------
 
@@ -19,6 +19,13 @@ states.fars <- c("Alabama", "Alaska", "American Samoa", "Arizona", "Arkansas",
                  "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", 
                  "Vermont", "Virginia", "Virgin Islands (Since 2004)", "Washington", 
                  "West Virginia", "Wisconsin", "Wyoming")
+
+weather.conditions.1979 <- c('Clear', 'Rain', 'Sleet', 'Snow', '', '', 'Cloudy')
+weather.conditions.1981 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', '', '', 'Other')
+weather.conditions.2006 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Rain', 'Sleet', 'Other')
+weather.conditions.2009 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Severe Crosswinds', 'Blowing Sand, Soil, Dirt', 'Other')
+weather.conditions.2012 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Severe Crosswinds', 'Blowing Sand, Soil, Dirt', 'Other', '', 'Cloudy', 'Snow')
+weather.conditions.later <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Severe Crosswinds', 'Blowing Sand, Soil, Dirt', 'Other', '', 'Cloudy', 'Snow', 'Freezing Rain')
 
 years <- seq(1975, 2019, 1)
 for (year in years) {
@@ -57,7 +64,7 @@ for (year in years) {
            Longitude = LONGITUD, # 88, 99, 88.88, 99.99, 77.7777, 88.888, 99.999 are unknown/not reported
            MannerOfCollisionId = MAN_COLL, # 9, 98, 99 are unknown/not reported for MAN_COLL
            LightConditionId = LGT_COND, # 9, 8 are unknown/not reported for LGT_COND
-           WeatherConditionId = WEATHER, # 98, 99 are unknown/not reported for WEATHER
+           WeatherCondition = WEATHER, # 98, 99 are unknown/not reported for WEATHER
            NumberOfFatalities = FATALS,
            NumberOfDrunkDriversInvolved = DRUNK_DR, # Beginning in 2008, DRUNK_DR is for drivers only. For 1999-2007, it was incorrectly derived as anybody in the crash testing positive for alcohol at a certain level. Before that, it was not super reliable
            TotalLanesInRoadway = NO_LANES,
@@ -71,7 +78,7 @@ for (year in years) {
       LandUse = as.factor(LandUseId),
       MannerOfCollision = as.factor(MannerOfCollisionId),
       LightCondition = as.factor(LightConditionId),
-      WeatherCondition = as.factor(WeatherConditionId),
+      WeatherCondition = as.factor(WeatherCondition),
     ) %>%
     mutate(
       State = states.fars[StateId],
@@ -88,7 +95,7 @@ for (year in years) {
                                    ifelse(MannerOfCollisionId == 9, NA, MannerOfCollisionId),
                                    ifelse(MannerOfCollisionId %in% c(98, 99), NA, MannerOfCollisionId)),
       LightConditionId = ifelse(LightConditionId %in% c(8, 9), NA, LightConditionId),
-      WeatherConditionId = ifelse(WeatherConditionId %in% c(9, 99, 98), NA, WeatherConditionId),
+      WeatherCondition = ifelse(WeatherCondition %in% c(9, 99, 98), NA, WeatherCondition),
       TotalLanesInRoadway = ifelse(TotalLanesInRoadway == 9, NA, TotalLanesInRoadway),
       PostedSpeedLimit = ifelse(PostedSpeedLimit %in% c(98, 99), NA, PostedSpeedLimit),
       RoadwayAlignment = ifelse(RoadwayAlignment == 9, NA, RoadwayAlignment),
@@ -98,6 +105,16 @@ for (year in years) {
     filter(State %in% state.name) %>%
     mutate(StateAbbv = state.abb[match(State, state.name)]) %>%
     select(-StateId)
+  
+  # Convert weather data to values
+  cleaned.accident.df <- cleaned.accident.df %>%
+    mutate(WeatherConditionId = WeatherCondition) %>%
+    mutate(WeatherCondition = ifelse((Year <= 1979) & (Year >= 1975) & (WeatherCondition != '') & (!is.na(WeatherCondition)), weather.conditions.1979[WeatherCondition], WeatherCondition)) %>%
+    mutate(WeatherCondition = ifelse((Year <= 1981) & (Year >= 1980) & (WeatherCondition != '') & (!is.na(WeatherCondition)), weather.conditions.1981[WeatherCondition], WeatherCondition)) %>%
+    mutate(WeatherCondition = ifelse((Year <= 2006) & (Year >= 1982) & (WeatherCondition != '') & (!is.na(WeatherCondition)), weather.conditions.2006[WeatherCondition], WeatherCondition)) %>%
+    mutate(WeatherCondition = ifelse((Year <= 2009) & (Year >= 2007) & (WeatherCondition != '') & (!is.na(WeatherCondition)), weather.conditions.2009[WeatherCondition], WeatherCondition)) %>%
+    mutate(WeatherCondition = ifelse((Year <= 2012) & (Year >= 2010) & (WeatherCondition != '') & (!is.na(WeatherCondition)), weather.conditions.2012[WeatherCondition], WeatherCondition)) %>%
+    mutate(WeatherCondition = ifelse((Year >= 2013) & (WeatherCondition != '') & (!is.na(WeatherCondition)), weather.conditions.later[WeatherCondition], WeatherCondition))
   
   cleaned.accident.df[is.na(cleaned.accident.df)] <- ""
   
