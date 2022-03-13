@@ -26,6 +26,12 @@ for dir in dirs: # looping over all years of data
 final_df = final_df.groupby(['Year', 'Month'])['CaseId'].nunique().reset_index().rename(columns = {'CaseId':'NumAccidents'})
 #final_df = final_df.groupby(['Year', 'Month'])['CaseId'].apply(wavg, )
 
+
+##TO DO: 
+## get weighted average value 
+## change x axis to name label instead of number 
+## determine which years to include (every 5 years? every 10 years? )
+## custom seaborn themeing 
 sns.lineplot(data=final_df, x="Month", y="NumAccidents", hue="Year")
 plt.suptitle('Number of Fatal Accidents per Month from 1975 - 2019')
 plt.show()
