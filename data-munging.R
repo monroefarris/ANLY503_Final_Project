@@ -103,7 +103,8 @@ for (year in years) {
       RoadwaySurfaceCondition = ifelse(RoadwaySurfaceCondition %in% c(8, 9), NA, RoadwaySurfaceCondition)
     ) %>%
     filter(State %in% state.name) %>%
-    mutate(StateAbbv = state.abb[match(State, state.name)]) %>%
+    mutate(StateAbbv = state.abb[match(State, state.name)],
+           DateOfAccident = make_date(Year, Month, Day)) %>%
     select(-StateId)
   
   # Convert weather data to values
