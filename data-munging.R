@@ -23,9 +23,9 @@ states.fars <- c("Alabama", "Alaska", "American Samoa", "Arizona", "Arkansas",
 weather.conditions.1979 <- c('Clear', 'Rain', 'Sleet', 'Snow', '', '', 'Cloudy')
 weather.conditions.1981 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', '', '', 'Other')
 weather.conditions.2006 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Rain', 'Sleet', 'Other')
-weather.conditions.2009 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Severe Crosswinds', 'Blowing Sand, Soil, Dirt', 'Other')
-weather.conditions.2012 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Severe Crosswinds', 'Blowing Sand, Soil, Dirt', 'Other', '', 'Cloudy', 'Snow')
-weather.conditions.later <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Severe Crosswinds', 'Blowing Sand, Soil, Dirt', 'Other', '', 'Cloudy', 'Snow', 'Freezing Rain')
+weather.conditions.2009 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Wind', 'Blowing Sand, Soil, Dirt', 'Other')
+weather.conditions.2012 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Wind', 'Blowing Sand, Soil, Dirt', 'Other', '', 'Cloudy', 'Snow')
+weather.conditions.later <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Wind', 'Blowing Sand, Soil, Dirt', 'Other', '', 'Cloudy', 'Snow', 'Freezing Rain')
 
 years <- seq(1975, 2019, 1)
 for (year in years) {
