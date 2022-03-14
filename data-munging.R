@@ -27,7 +27,7 @@ weather.conditions.2009 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke
 weather.conditions.2012 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Wind', 'Blowing Sand, Soil, Dirt', 'Other', '', 'Cloudy', 'Snow')
 weather.conditions.later <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Wind', 'Blowing Sand, Soil, Dirt', 'Other', '', 'Cloudy', 'Snow', 'Freezing Rain')
 
-years <- seq(1975, 2019, 1)
+years <- seq(1980, 1980, 1)
 for (year in years) {
   accident.df <- read.csv(paste0('./data/', year, '/accident.csv'))
   
@@ -49,7 +49,7 @@ for (year in years) {
     select(ST_CASE, Year, STATE, PERSONS, DAY, MONTH, DAY_WEEK, 
            HOUR, MINUTE, ROUTE, RUR_URB, LATITUDE, LONGITUD, 
            MAN_COLL, LGT_COND, WEATHER, FATALS, DRUNK_DR, NO_LANES, SP_LIMIT,
-           ALIGNMNT, PROFILE, SUR_COND) %>%
+           ALIGNMNT, PROFILE, SUR_COND) %>%belt
     rename(CaseId = ST_CASE,
            StateId = STATE,
            NumberOfPersonsInvolved = PERSONS,
@@ -200,11 +200,57 @@ for (year in years) {
   person.df <- read.csv(paste0('./data/', year, '/person.csv'))
   print(paste0('Cleaning person data for ', year))
   
+  lookup <- c("REST_USE" = "AUT_REST")
+  
+  severity.injury <- c('Uninjured', 'Possible Injury', 'Minor Injury', 'Serious Injury', 'Fatal Injury', 'Unknown Injury', 'Died Prior to Crash')
+  seating.pos.1981 <- c('Non Motorist', 'Front Left', 'Front Middle', 'Front Right', 
+                        'Second Left', 'Second Middle', 'Second Right', 
+                        'Third Left', 'Third Middle', 'Third Right', 
+                        'Front Other', 'Second Other', 'Third Other',
+                        'Other', 'Cab Sleeper', 'Vehicle Exterior')
+  seating.pos.later <- c('11' = 'Front Left', 
+                         '12' = 'Front Middle', 
+                         '13' = 'Front Right', 
+                         '18' = 'Front Other', 
+                         '19' = 'Front Other',
+                         '21' = 'Second Left', 
+                         '22' = 'Second Middle', 
+                         '23' = 'Second Right', 
+                         '28' = 'Second Other', 
+                         '29' = 'Second Other',
+                         '31' = 'Third Left', 
+                         '32' = 'Third Middle', 
+                         '33' = 'Third Right', 
+                         '38' = 'Third Other',
+                         '39' = 'Third Other',
+                         '41' = 'Fourth Left', 
+                         '42' = 'Fourth Middle', 
+                         '43' = 'Fourth Right', 
+                         '48' = 'Fourth Other', 
+                         '49' = 'Fourth Other',
+                         '50' = 'Cab Sleeper', 
+                         '51' = 'Other', 
+                         '52' = 'Other', 
+                         '53' = 'Other', 
+                         '54' = 'Trailing Unit', 
+                         '55' = 'Vehicle Exterior')
+  
+  # WIP
+  restraint.use.1990 <- c('0' = 'Non-Motorist',
+                          '1' = 'Automatic Belt in Use',
+                          '2' = 'Automatic Belt not in Use',
+                          '3' = 'Deployed Air Bag',
+                          '4' = 'Non Deployed Air Bag',
+                          '5' = 'Passive Belt')
+  
+  restraint.use.later <- c('')
+  
   cleaned.person.df <- person.df %>%
+    rename(any_of(lookup)) %>%
     mutate(DRUGS = ifelse(rep('DRUGS' %in% names(.), nrow(.)), DRUGS, NA),
            Year = year) %>%
     select(ST_CASE, VEH_NO, AGE, SEX, Year, PER_TYP, 
-           INJ_SEV, SEAT_POS, DRINKING, DRUGS) %>%
+           INJ_SEV, SEAT_POS, DRINKING, DRUGS, REST_USE) %>%
     rename(CaseId = ST_CASE,
            VehicleId = VEH_NO,
            Age = AGE,
@@ -213,7 +259,8 @@ for (year in years) {
            SeverityOfInjury = INJ_SEV,
            SeatingPosition = SEAT_POS,
            PoliceReportedAlcoholInvolvement = DRINKING,
-           PoliceReportedDrugInvolvement = DRUGS) %>%
+           PoliceReportedDrugInvolvement = DRUGS,
+           RestraintSystemUsed) %>%
     mutate(Age = ifelse(Year <= 2008,
                         ifelse(Age == 99, NA, Age),
                         ifelse(Age %in% c(998, 999), NA, Age)),
@@ -224,9 +271,18 @@ for (year in years) {
            SeverityOfInjury = ifelse(SeverityOfInjury %in% c(8, 9), NA, SeverityOfInjury),
            SeatingPosition = ifelse(SeatingPosition %in% c(98, 99), NA, SeatingPosition),
            PoliceReportedAlcoholInvolvement = ifelse(PoliceReportedAlcoholInvolvement %in% c(8, 9), NA, PoliceReportedAlcoholInvolvement),
-           PoliceReportedDrugInvolvement = ifelse(PoliceReportedDrugInvolvement %in% c(8, 9), NA, PoliceReportedDrugInvolvement)
+           PoliceReportedDrugInvolvement = ifelse(PoliceReportedDrugInvolvement %in% c(8, 9), NA, PoliceReportedDrugInvolvement),
+           RestraintSystemUsed = ifelse(RestraintSystemUsed %in% c(9), NA, RestraintSystemUsed)
      ) %>%
-    mutate(Sex = ifelse(Age == 1, 'Male', 'Female'))
+    mutate(Sex = ifelse(Age == 1, 'Male', 'Female')) %>%
+    mutate(SeverityOfInjuryId = SeverityOfInjury) %>%
+    mutate(SeverityOfInjury = ifelse(!is.na(SeverityOfInjury), severity.injury[SeverityOfInjury + 1], SeverityOfInjury)) %>%
+    mutate(SeatingPositionId = as.character(SeatingPosition)) %>%
+    mutate(SeatingPosition = ifelse(Year <= 1981, seating.pos.1981[SeatingPosition + 1], SeatingPosition)) %>%
+    mutate(SeatingPosition = ifelse(Year >= 1982, 
+                                    ifelse((SeatingPositionId == '0') | (SeatingPositionId == ''), 'Non Motorist', seating.pos.later[SeatingPositionId]), 
+                                    SeatingPosition))
+  
   cleaned.person.df[is.na(cleaned.person.df)] <- ""
   
   print(paste0('Cleaned person data for ', year))
