@@ -1,0 +1,11 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+sketches/
+.idea/
+*.pdf
+cleaned-*.csv
+combined-data.csv
+.DS_Store
+data/
