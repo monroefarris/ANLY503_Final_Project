@@ -1,6 +1,8 @@
+from typing import final
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import datetime as dt
 import os 
 
 # storing home dir if needed
@@ -24,14 +26,17 @@ for dir in dirs: # looping over all years of data
         final_df = final_df.append(x) # appending each year to final viz dataframe
 # grouping by month and counting number of unique id's to get a count of number of accidents for that month
 final_df = final_df.groupby(['Year', 'Month'])['CaseId'].nunique().reset_index().rename(columns = {'CaseId':'NumAccidents'})
-#final_df = final_df.groupby(['Year', 'Month'])['CaseId'].apply(wavg, )
 
+# subsetting by every 5 years 
+final_df = final_df[(pd.to_numeric(final_df['Year']) % 5 == 0)]
 
-##TO DO: 
-## get weighted average value 
-## change x axis to name label instead of number 
-## determine which years to include (every 5 years? every 10 years? )
-## custom seaborn themeing 
+# converting month to datetime object and gettign month name
+final_df['Month'] = pd.to_datetime(final_df['Month'], format = "%m")
+final_df['Month'] = final_df['Month'].dt.strftime('%B')
+
 sns.lineplot(data=final_df, x="Month", y="NumAccidents", hue="Year")
+plt.xticks(rotation = 45) 
 plt.suptitle('Number of Fatal Accidents per Month from 1975 - 2019')
-plt.show()
+#plt.show()
+os.chdir(home_dir)
+plt.savefig('avg-accidents-viz.png')
