@@ -260,7 +260,7 @@ for (year in years) {
            SeatingPosition = SEAT_POS,
            PoliceReportedAlcoholInvolvement = DRINKING,
            PoliceReportedDrugInvolvement = DRUGS,
-           RestraintSystemUsed) %>%
+           RestraintSystemUsed = REST_USE) %>%
     mutate(Age = ifelse(Year <= 2008,
                         ifelse(Age == 99, NA, Age),
                         ifelse(Age %in% c(998, 999), NA, Age)),
@@ -274,7 +274,7 @@ for (year in years) {
            PoliceReportedDrugInvolvement = ifelse(PoliceReportedDrugInvolvement %in% c(8, 9), NA, PoliceReportedDrugInvolvement),
            RestraintSystemUsed = ifelse(RestraintSystemUsed %in% c(9), NA, RestraintSystemUsed)
      ) %>%
-    mutate(Sex = ifelse(Age == 1, 'Male', 'Female')) %>%
+    mutate(Sex = ifelse(Sex == 1, 'Male', 'Female')) %>%
     mutate(SeverityOfInjuryId = SeverityOfInjury) %>%
     mutate(SeverityOfInjury = ifelse(!is.na(SeverityOfInjury), severity.injury[SeverityOfInjury + 1], SeverityOfInjury)) %>%
     mutate(SeatingPositionId = as.character(SeatingPosition)) %>%
