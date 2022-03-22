@@ -27,7 +27,7 @@ weather.conditions.2009 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke
 weather.conditions.2012 <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Wind', 'Blowing Sand, Soil, Dirt', 'Other', '', 'Cloudy', 'Snow')
 weather.conditions.later <- c('Clear', 'Rain', 'Sleet', 'Snow', 'Fog, Smog, Smoke', 'Wind', 'Blowing Sand, Soil, Dirt', 'Other', '', 'Cloudy', 'Snow', 'Freezing Rain')
 
-years <- seq(1980, 1980, 1)
+years <- seq(1975, 2019, 1)
 for (year in years) {
   accident.df <- read.csv(paste0('./data/', year, '/accident.csv'))
   

@@ -11,6 +11,7 @@
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="https://rawgit.com/mholt/PapaParse/master/papaparse.js"></script>
   </head>
   <body>
     <figure class="highcharts-figure">
@@ -18,624 +19,149 @@
     </figure>
 
     <script>
-      Highcharts.chart("container", {
-        chart: {
-          type: "column",
-          events: {
-            drilldown: function (e) {
-              if (!e.seriesOptions) {
-                var chart = this;
-                const drilldowns = {
-                  "Driver - Fatal Injury": [
+      const year = "1990";
+      const drilldownPromise = fetch(
+        `https://s3.amazonaws.com/datastore.portfolio.sampastoriza.com/viz_data/vehicle_drilldown_data_${year}.csv`
+      )
+        .then((result) => result.text())
+        .then((text) =>
+          Papa.parse(text, { header: true, skipEmptyLines: true })
+        )
+        .then((parsedData) => {
+          const drilldowns = parsedData.data.reduce((combined, next) => {
+            if (!!combined[next.drilldown]) {
+              if (combined[next.drilldown].some((el) => el.name == next.Sex)) {
+                const data = combined[next.drilldown].find(
+                  (el) => el.name == next.Sex
+                );
+                data.data.push({
+                  y: parseInt(next.NumberOfPeople),
+                  name: next.AgeGroup,
+                });
+              } else {
+                combined[next.drilldown].push({
+                  name: next.Sex,
+                  color: next.Sex == "Female" ? "pink" : "blue",
+                  data: [
                     {
-                      name: "Female",
-                      color: "pink",
-                      data: [
-                        {
-                          y: 645,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 877,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 743,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 523,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 234,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                    {
-                      name: "Male",
-                      color: "blue",
-                      data: [
-                        {
-                          y: 754,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 333,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 445,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 864,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 1223,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
+                      y: parseInt(next.NumberOfPeople),
+                      name: next.AgeGroup,
                     },
                   ],
-                  "Driver - Injured": [
-                    {
-                      name: "Female",
-                      color: "pink",
-                      data: [
-                        {
-                          y: 645,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 877,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 743,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 523,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 234,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                    {
-                      name: "Male",
-                      color: "blue",
-                      data: [
-                        {
-                          y: 754,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 333,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 445,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 864,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 1223,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                  ],
-                  "Driver - Uninjured": [
-                    {
-                      name: "Female",
-                      color: "pink",
-                      data: [
-                        {
-                          y: 645,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 877,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 743,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 523,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 234,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                    {
-                      name: "Male",
-                      color: "blue",
-                      data: [
-                        {
-                          y: 754,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 333,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 445,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 864,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 1223,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                  ],
-                  "Passenger - Fatal Injury": [
-                    {
-                      name: "Female",
-                      color: "pink",
-                      data: [
-                        {
-                          y: 645,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 877,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 743,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 523,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 234,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                    {
-                      name: "Male",
-                      color: "blue",
-                      data: [
-                        {
-                          y: 754,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 333,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 445,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 864,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 1223,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                  ],
-                  "Passenger - Injured": [
-                    {
-                      name: "Female",
-                      color: "pink",
-                      data: [
-                        {
-                          y: 645,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 877,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 743,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 523,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 234,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                    {
-                      name: "Male",
-                      color: "blue",
-                      data: [
-                        {
-                          y: 754,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 333,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 445,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 864,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 1223,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                  ],
-                  "Passenger - Uninjured": [
-                    {
-                      name: "Female",
-                      color: "pink",
-                      data: [
-                        {
-                          y: 645,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 877,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 743,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 523,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 234,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                    {
-                      name: "Male",
-                      color: "blue",
-                      data: [
-                        {
-                          y: 754,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 333,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 445,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 864,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 1223,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                  ],
-                  "Back Seat - Fatal Injury": [
-                    {
-                      name: "Female",
-                      color: "pink",
-                      data: [
-                        {
-                          y: 645,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 877,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 743,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 523,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 234,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                    {
-                      name: "Male",
-                      color: "blue",
-                      data: [
-                        {
-                          y: 754,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 333,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 445,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 864,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 1223,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                  ],
-                  "Back Seat - Injured": [
-                    {
-                      name: "Female",
-                      color: "pink",
-                      data: [
-                        {
-                          y: 645,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 877,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 743,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 523,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 234,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                    {
-                      name: "Male",
-                      color: "blue",
-                      data: [
-                        {
-                          y: 754,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 333,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 445,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 864,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 1223,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                  ],
-                  "Back Seat - Uninjured": [
-                    {
-                      name: "Female",
-                      color: "pink",
-                      data: [
-                        {
-                          y: 645,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 877,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 743,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 523,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 234,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                    {
-                      name: "Male",
-                      color: "blue",
-                      data: [
-                        {
-                          y: 754,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 333,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 445,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 864,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 1223,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                    },
-                  ],
-                };
-                const seriesList = drilldowns[e.point.drilldown];
-                for (let series of seriesList) {
-                  chart.addSingleSeriesAsDrilldown(e.point, series);
-                }
-                chart.applyDrilldown();
+                  xAxis: 1,
+                });
               }
+            } else {
+              combined[next.drilldown] = [
+                {
+                  name: next.Sex,
+                  color: next.Sex == "Female" ? "pink" : "blue",
+                  data: [
+                    {
+                      y: parseInt(next.NumberOfPeople),
+                      name: next.AgeGroup,
+                    },
+                  ],
+                  xAxis: 1,
+                },
+              ];
+            }
+            return combined;
+          }, {});
+
+          console.log("Drilldown Data", drilldowns);
+          return drilldowns;
+        });
+
+      const seriesPromise = fetch(
+        `https://s3.amazonaws.com/datastore.portfolio.sampastoriza.com/viz_data/vehicle_series_data_${year}.csv`
+      )
+        .then((result) => result.text())
+        .then((text) =>
+          Papa.parse(text, { header: true, skipEmptyLines: true })
+        )
+        .then((parsedData) => {
+          const seriesData = parsedData.data.reduce((combined, next) => {
+            if (combined.some((el) => el.name == next.SeverityOfInjury)) {
+              const injuryData = combined.find(
+                (el) => el.name == next.SeverityOfInjury
+              );
+              injuryData.data.push({
+                y: parseInt(next.NumberOfPeople),
+                name: next.SeatingPosition,
+                drilldown: next.drilldown,
+              });
+            } else {
+              combined.push({
+                name: next.SeverityOfInjury,
+                data: [
+                  {
+                    y: parseInt(next.NumberOfPeople),
+                    name: next.SeatingPosition,
+                    drilldown: next.drilldown,
+                  },
+                ],
+              });
+            }
+            return combined;
+          }, []);
+
+          console.log("series data", seriesData);
+          return seriesData;
+        });
+
+      Promise.all([drilldownPromise, seriesPromise]).then(
+        ([drilldowns, seriesData]) => {
+          Highcharts.chart("container", {
+            chart: {
+              type: "column",
+              events: {
+                drilldown: function (e) {
+                  if (!e.seriesOptions) {
+                    const chart = this;
+                    const seriesList = drilldowns[e.point.drilldown];
+                    for (let series of seriesList) {
+                      chart.addSingleSeriesAsDrilldown(e.point, series);
+                    }
+                    chart.applyDrilldown();
+                  }
+                },
+              },
             },
-          },
-        },
-        title: {
-          text: "Locations of Passengers vs Severity of Injury (1980)",
-        },
-        xAxis: [
-          {
-            type: "category",
-            categories: ["Driver", "Passenger", "Back Seat"],
-          },
-          {
-            type: "category",
-            categories: [
-              "Child (0-12)",
-              "Teen (13-19)",
-              "Young Adult (20-35)",
-              "Adult (35-60)",
-              "Senior (60+)",
+            title: {
+              text: `Locations of Passengers vs Severity of Injury (${year})`,
+            },
+            xAxis: [
+              {
+                type: "category",
+                categories: ["Driver", "Passenger", "Back Seat"],
+              },
+              {
+                type: "category",
+                categories: [
+                  "Child (0-12)",
+                  "Teen (13-19)",
+                  "Young Adult (20-35)",
+                  "Adult (35-60)",
+                  "Senior (60+)",
+                ],
+              },
             ],
-          },
-        ],
-        legend: {
-          enabled: true,
-        },
-        plotOptions: {
-          series: {
-            borderWidth: 0,
-            dataLabels: {
+            legend: {
               enabled: true,
             },
-          },
-        },
-        series: [
-          {
-            name: "Fatal Injury",
-            data: [
-              {
-                y: 28793,
-                name: "Driver",
-                drilldown: "Driver - Fatal Injury",
+            plotOptions: {
+              series: {
+                borderWidth: 0,
+                dataLabels: {
+                  enabled: true,
+                },
               },
-              {
-                y: 8495,
-                name: "Passenger",
-                drilldown: "Passenger - Fatal Injury",
-              },
-              {
-                y: 3264,
-                name: "Back Seat",
-                drilldown: "Back Seat - Fatal Injury",
-              },
-            ],
-            xAxis: 0,
-          },
-          {
-            name: "Injured",
-            data: [
-              {
-                y: 18412,
-                name: "Driver",
-                drilldown: "Driver - Injured",
-              },
-              {
-                y: 11836,
-                name: "Passenger",
-                drilldown: "Passenger - Injured",
-              },
-              {
-                y: 7996,
-                name: "Back Seat",
-                drilldown: "Back Seat - Injured",
-              },
-            ],
-            xAxis: 0,
-          },
-          {
-            name: "Uninjured",
-            data: [
-              {
-                y: 15551,
-                name: "Driver",
-                drilldown: "Driver - Uninjured",
-              },
-              {
-                y: 2875,
-                name: "Passenger",
-                drilldown: "Passenger - Uninjured",
-              },
-              {
-                y: 1253,
-                name: "Back Seat",
-                drilldown: "Back Seat - Uninjured",
-              },
-            ],
-            xAxis: 0,
-          },
-        ],
-      });
+            },
+            series: seriesData,
+          });
+        }
+      );
     </script>
   </body>
 </html>
