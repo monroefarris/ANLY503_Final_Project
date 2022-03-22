@@ -1,7 +1,6 @@
 #%%
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.express as px
 import datetime as dt
 import os 
 
@@ -38,11 +37,15 @@ final_df['Month'] = pd.to_datetime(final_df['Month'], format = "%m")
 final_df['Month'] = final_df['Month'].dt.strftime('%B')
 
 #%%
-sns.lineplot(data=final_df, x="Month", y="NumAccidents", hue="Year")
-plt.xticks(rotation = 45) 
-plt.suptitle('Number of Fatal Accidents per Month from 1975 - 2019')
-#plt.show()
+
+fig = px.line(final_df, x="Month", y="NumAccidents", color='Year', title='Number of Fatal Accidents per Month from 1975 - 2019')
+fig.show()
+# saving initial static viz for reference 
+# sns.lineplot(data=final_df, x="Month", y="NumAccidents", hue="Year")
+# plt.xticks(rotation = 45) 
+# plt.suptitle('Number of Fatal Accidents per Month from 1975 - 2019')
+# #plt.show()
 os.chdir(home_dir)
-plt.savefig('avg-accidents-viz.png')
+fig.write_html('avg_accidents.html')
 
 # %%
