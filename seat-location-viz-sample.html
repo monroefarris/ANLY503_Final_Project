@@ -21,6 +21,7 @@
       Highcharts.chart("container", {
         chart: {
           type: "column",
+          zoomType: "x",
           events: {
             drilldown: function (e) {
               if (!e.seriesOptions) {
@@ -28,9 +29,10 @@
                 const drilldowns = {
                   "Driver - Fatal Injury": [
                     {
+                      id: "1",
                       name: "Not Ejected",
-                      color: "green",
-                      borderColor: "green",
+                      color: "red",
+                      borderColor: "red",
                       borderWidth: 0.5,
                       index: 1,
                       data: [
@@ -59,37 +61,11 @@
                       stack: "No Seat Belt",
                     },
                     {
-                      name: "Ejected",
-                      color: "red",
-                      index: 0,
-                      data: [
-                        {
-                          y: 754,
-                          name: "Child (0-12)",
-                        },
-                        {
-                          y: 333,
-                          name: "Teen (13-19)",
-                        },
-                        {
-                          y: 445,
-                          name: "Young Adult (20-35)",
-                        },
-                        {
-                          y: 864,
-                          name: "Adult (35-60)",
-                        },
-                        {
-                          y: 1223,
-                          name: "Senior (60+)",
-                        },
-                      ],
-                      xAxis: 1,
-                      stack: "No Seat Belt",
-                    },
-                    {
+                      id: "2",
                       name: "Not Ejected",
                       color: "green",
+                      borderColor: "green",
+                      borderWidth: 0.5,
                       index: 1,
                       data: [
                         {
@@ -117,8 +93,45 @@
                       stack: "Seat Belt",
                     },
                     {
+                      id: "3",
                       name: "Ejected",
-                      color: "red",
+                      color: "white",
+                      borderColor: "red",
+                      borderWidth: 0.5,
+                      linkedTo: "1",
+                      index: 0,
+                      data: [
+                        {
+                          y: 754,
+                          name: "Child (0-12)",
+                        },
+                        {
+                          y: 333,
+                          name: "Teen (13-19)",
+                        },
+                        {
+                          y: 445,
+                          name: "Young Adult (20-35)",
+                        },
+                        {
+                          y: 864,
+                          name: "Adult (35-60)",
+                        },
+                        {
+                          y: 1223,
+                          name: "Senior (60+)",
+                        },
+                      ],
+                      xAxis: 1,
+                      stack: "No Seat Belt",
+                    },
+                    {
+                      id: "4",
+                      name: "Ejected",
+                      color: "white",
+                      borderColor: "green",
+                      borderWidth: 0.5,
+                      linkedTo: "2",
                       index: 0,
                       data: [
                         {
@@ -611,6 +624,7 @@
           {
             type: "category",
             categories: ["Driver", "Passenger", "Back Seat"],
+            min: 0,
           },
           {
             type: "category",
@@ -621,10 +635,14 @@
               "Adult (35-60)",
               "Senior (60+)",
             ],
+            min: 0,
           },
         ],
         legend: {
-          enabled: true,
+          labelFormatter: function () {
+            console.log("test", this);
+            return this.userOptions.stack;
+          },
         },
         plotOptions: {
           series: {

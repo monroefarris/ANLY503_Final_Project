@@ -26,6 +26,7 @@
       };
 
       const century = "20";
+      let index = 1;
       const drilldownPromise = fetch(
         `https://s3.amazonaws.com/datastore.portfolio.sampastoriza.com/viz_data/vehicle_drilldown_data_${century}.csv`
       )
@@ -34,9 +35,18 @@
           Papa.parse(text, { header: true, skipEmptyLines: true })
         )
         .then((parsedData) => {
+          parsedData.data.sort((a, b) =>
+            b.EjectionStatus.localeCompare(a.EjectionStatus)
+          );
           const drilldowns = parsedData.data.reduce((combined, next) => {
             if (!!combined[next.drilldown]) {
-              if (combined[next.drilldown].some((el) => el.name == next.Sex)) {
+              if (
+                combined[next.drilldown].some(
+                  (el) =>
+                    el.name == next.EjectionStatus &&
+                    el.stack == next.RestraintSystemUsed
+                )
+              ) {
                 const data = combined[next.drilldown].find(
                   (el) =>
                     el.name == next.EjectionStatus &&
@@ -47,30 +57,62 @@
                   name: next.AgeGroup,
                 });
               } else {
-                combined[next.drilldown].push({
-                  name: next.EjectionStatus,
-                  stack: next.RestraintSystemUsed,
-                  borderColor: stackColorMap[next.RestraintSystemUsed],
-                  borderWidth: 0.5,
-                  color:
-                    next.EjectionStatus == "Ejected"
-                      ? "white"
-                      : stackColorMap[next.RestraintSystemUsed],
-                  index: next.EjectionStatus == "Ejected" ? 0 : 1,
-                  data: [
-                    {
-                      y: parseInt(next.NumberOfPeople),
-                      name: next.AgeGroup,
-                    },
-                  ],
-                  xAxis: 1,
-                });
+                if (
+                  combined[next.drilldown].some(
+                    (el) => el.stack == next.RestraintSystemUsed
+                  )
+                ) {
+                  const series = combined[next.drilldown].find(
+                    (el) => el.stack == next.RestraintSystemUsed
+                  );
+                  combined[next.drilldown].push({
+                    name: next.EjectionStatus,
+                    stack: next.RestraintSystemUsed,
+                    borderColor: stackColorMap[next.RestraintSystemUsed],
+                    borderWidth: 0.5,
+                    linkedTo: series.id,
+                    color:
+                      next.EjectionStatus == "Ejected"
+                        ? "white"
+                        : stackColorMap[next.RestraintSystemUsed],
+                    index: next.EjectionStatus == "Ejected" ? 0 : 1,
+                    data: [
+                      {
+                        y: parseInt(next.NumberOfPeople),
+                        name: next.AgeGroup,
+                      },
+                    ],
+                    xAxis: 1,
+                  });
+                } else {
+                  combined[next.drilldown].push({
+                    id: `${index}`,
+                    name: next.EjectionStatus,
+                    stack: next.RestraintSystemUsed,
+                    borderColor: stackColorMap[next.RestraintSystemUsed],
+                    borderWidth: 0.5,
+                    color:
+                      next.EjectionStatus == "Ejected"
+                        ? "white"
+                        : stackColorMap[next.RestraintSystemUsed],
+                    index: next.EjectionStatus == "Ejected" ? 0 : 1,
+                    data: [
+                      {
+                        y: parseInt(next.NumberOfPeople),
+                        name: next.AgeGroup,
+                      },
+                    ],
+                    xAxis: 1,
+                  });
+                  index++;
+                }
               }
             } else {
               combined[next.drilldown] = [
                 {
                   name: next.EjectionStatus,
                   stack: next.RestraintSystemUsed,
+                  id: `${index}`,
                   borderColor: stackColorMap[next.RestraintSystemUsed],
                   borderWidth: 0.5,
                   color:
@@ -87,6 +129,7 @@
                   xAxis: 1,
                 },
               ];
+              index++;
             }
             return combined;
           }, {});
@@ -153,7 +196,13 @@
                       chart.addSingleSeriesAsDrilldown(e.point, series);
                     }
                     chart.applyDrilldown();
+                    console.log("chart", chart);
+                    chart.legend.title.attr({ text: "Restraint System Used" });
                   }
+                },
+                drillup: function (e) {
+                  const chart = this;
+                  chart.legend.title.attr({ text: "Injury Status" });
                 },
               },
             },
@@ -164,6 +213,7 @@
               {
                 type: "category",
                 categories: ["Driver", "Passenger", "Back Seat"],
+                min: 0,
               },
               {
                 type: "category",
@@ -174,10 +224,21 @@
                   "Adult (35-60)",
                   "Senior (60+)",
                 ],
+                min: 0,
               },
             ],
             legend: {
-              enabled: true,
+              align: "right",
+              verticalAlign: "top",
+              layout: "vertical",
+              x: 0,
+              y: 100,
+              title: {
+                text: "Injury Status",
+              },
+              labelFormatter: function () {
+                return this.userOptions.stack;
+              },
             },
             plotOptions: {
               series: {
