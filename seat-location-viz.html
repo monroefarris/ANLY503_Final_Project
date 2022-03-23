@@ -19,9 +19,15 @@
     </figure>
 
     <script>
-      const year = "1990";
+      const stackColorMap = {
+        "None Used": "magenta",
+        "Partial Restraint Used": "lightblue",
+        "Proper Restraint Used": "red",
+      };
+
+      const century = "20";
       const drilldownPromise = fetch(
-        `https://s3.amazonaws.com/datastore.portfolio.sampastoriza.com/viz_data/vehicle_drilldown_data_${year}.csv`
+        `https://s3.amazonaws.com/datastore.portfolio.sampastoriza.com/viz_data/vehicle_drilldown_data_${century}.csv`
       )
         .then((result) => result.text())
         .then((text) =>
@@ -32,7 +38,9 @@
             if (!!combined[next.drilldown]) {
               if (combined[next.drilldown].some((el) => el.name == next.Sex)) {
                 const data = combined[next.drilldown].find(
-                  (el) => el.name == next.Sex
+                  (el) =>
+                    el.name == next.EjectionStatus &&
+                    el.stack == next.RestraintSystemUsed
                 );
                 data.data.push({
                   y: parseInt(next.NumberOfPeople),
@@ -40,8 +48,15 @@
                 });
               } else {
                 combined[next.drilldown].push({
-                  name: next.Sex,
-                  color: next.Sex == "Female" ? "pink" : "blue",
+                  name: next.EjectionStatus,
+                  stack: next.RestraintSystemUsed,
+                  borderColor: stackColorMap[next.RestraintSystemUsed],
+                  borderWidth: 0.5,
+                  color:
+                    next.EjectionStatus == "Ejected"
+                      ? "white"
+                      : stackColorMap[next.RestraintSystemUsed],
+                  index: next.EjectionStatus == "Ejected" ? 0 : 1,
                   data: [
                     {
                       y: parseInt(next.NumberOfPeople),
@@ -54,8 +69,15 @@
             } else {
               combined[next.drilldown] = [
                 {
-                  name: next.Sex,
-                  color: next.Sex == "Female" ? "pink" : "blue",
+                  name: next.EjectionStatus,
+                  stack: next.RestraintSystemUsed,
+                  borderColor: stackColorMap[next.RestraintSystemUsed],
+                  borderWidth: 0.5,
+                  color:
+                    next.EjectionStatus == "Ejected"
+                      ? "white"
+                      : stackColorMap[next.RestraintSystemUsed],
+                  index: next.EjectionStatus == "Ejected" ? 0 : 1,
                   data: [
                     {
                       y: parseInt(next.NumberOfPeople),
@@ -74,7 +96,7 @@
         });
 
       const seriesPromise = fetch(
-        `https://s3.amazonaws.com/datastore.portfolio.sampastoriza.com/viz_data/vehicle_series_data_${year}.csv`
+        `https://s3.amazonaws.com/datastore.portfolio.sampastoriza.com/viz_data/vehicle_series_data_${century}.csv`
       )
         .then((result) => result.text())
         .then((text) =>
@@ -94,6 +116,7 @@
             } else {
               combined.push({
                 name: next.SeverityOfInjury,
+                stack: next.SeverityOfInjury,
                 data: [
                   {
                     y: parseInt(next.NumberOfPeople),
@@ -112,9 +135,15 @@
 
       Promise.all([drilldownPromise, seriesPromise]).then(
         ([drilldowns, seriesData]) => {
+          Highcharts.setOptions({
+            lang: {
+              thousandsSep: ",",
+            },
+          });
           Highcharts.chart("container", {
             chart: {
               type: "column",
+              zoomType: "x",
               events: {
                 drilldown: function (e) {
                   if (!e.seriesOptions) {
@@ -129,7 +158,7 @@
               },
             },
             title: {
-              text: `Locations of Passengers vs Severity of Injury (${year})`,
+              text: `Locations of Passengers vs Severity of Injury (${century}th Century)`,
             },
             xAxis: [
               {
@@ -156,6 +185,7 @@
                 dataLabels: {
                   enabled: true,
                 },
+                stacking: "normal",
               },
             },
             series: seriesData,
