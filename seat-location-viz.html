@@ -12,11 +12,99 @@
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="https://code.highcharts.com/modules/accessibility.js"></script>
     <script src="https://rawgit.com/mholt/PapaParse/master/papaparse.js"></script>
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <link
+      href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    <style>
+      div[class="content"] {
+        display: none;
+      }
+    </style>
   </head>
   <body>
-    <figure class="highcharts-figure">
-      <div id="container"></div>
-    </figure>
+    <div class="mdc-tab-bar" role="tablist">
+      <div class="mdc-tab-scroller">
+        <div class="mdc-tab-scroller__scroll-area">
+          <div class="mdc-tab-scroller__scroll-content">
+            <button
+              class="mdc-tab mdc-tab--active"
+              role="tab"
+              aria-selected="true"
+              tabindex="0"
+            >
+              <span class="mdc-tab__content">
+                <span class="mdc-tab__icon material-icons" aria-hidden="true"
+                  >drive_eta</span
+                >
+                <span class="mdc-tab__text-label">20th Century</span>
+              </span>
+              <span class="mdc-tab-indicator mdc-tab-indicator--active">
+                <span
+                  class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"
+                ></span>
+              </span>
+              <span class="mdc-tab__ripple"></span>
+            </button>
+            <button
+              class="mdc-tab"
+              role="tab"
+              aria-selected="true"
+              tabindex="0"
+            >
+              <span class="mdc-tab__content">
+                <span class="mdc-tab__icon material-icons" aria-hidden="true"
+                  >rocket_launch</span
+                >
+                <span class="mdc-tab__text-label">21st Century</span>
+              </span>
+              <span class="mdc-tab-indicator mdc-tab-indicator--active">
+                <span
+                  class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"
+                ></span>
+              </span>
+              <span class="mdc-tab__ripple"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="content content--active">
+      <figure class="highcharts-figure">
+        <div id="20-century"></div>
+      </figure>
+    </div>
+
+    <div class="content">
+      <figure class="highcharts-figure">
+        <div id="21-century"></div>
+      </figure>
+    </div>
+
+    <script>
+      const tabBar = new mdc.tabBar.MDCTabBar(
+        document.querySelector(".mdc-tab-bar")
+      );
+      const contentEls = document.querySelectorAll(".content");
+      console.log(tabBar);
+      console.log(contentEls);
+
+      tabBar.listen("MDCTabBar:activated", function (event) {
+        // Hide currently-active content
+        document
+          .querySelector(".content--active")
+          .classList.remove("content--active");
+        // Show content for newly-activated tab
+        contentEls[event.detail.index].classList.add("content--active");
+        console.log(contentEls);
+        window.dispatchEvent(new Event("resize"));
+      });
+    </script>
 
     <script>
       const stackColorMap = {
@@ -24,76 +112,116 @@
         "Partial Restraint Used": "lightblue",
         "Proper Restraint Used": "red",
       };
+      const ejectedColor = "white";
 
-      const century = "20";
-      let index = 1;
-      const drilldownPromise = fetch(
-        `https://s3.amazonaws.com/datastore.portfolio.sampastoriza.com/viz_data/vehicle_drilldown_data_${century}.csv`
-      )
-        .then((result) => result.text())
-        .then((text) =>
-          Papa.parse(text, { header: true, skipEmptyLines: true })
+      const charts = [
+        {
+          century: "20",
+          chartTitle:
+            "Locations of Passengers vs Severity of Injury (20th Century)",
+          containerId: "20-century",
+        },
+        {
+          century: "21",
+          chartTitle:
+            "Locations of Passengers vs Severity of Injury (21st Century)",
+          containerId: "21-century",
+        },
+      ];
+
+      function createChart(chartConfig) {
+        let index = 1;
+        const drilldownPromise = fetch(
+          `https://s3.amazonaws.com/datastore.portfolio.sampastoriza.com/visualization_data/person_drilldown_series_data_${chartConfig.century}_century.csv`
         )
-        .then((parsedData) => {
-          parsedData.data.sort((a, b) =>
-            b.EjectionStatus.localeCompare(a.EjectionStatus)
-          );
-          const drilldowns = parsedData.data.reduce((combined, next) => {
-            if (!!combined[next.drilldown]) {
-              if (
-                combined[next.drilldown].some(
-                  (el) =>
-                    el.name == next.EjectionStatus &&
-                    el.stack == next.RestraintSystemUsed
-                )
-              ) {
-                const data = combined[next.drilldown].find(
-                  (el) =>
-                    el.name == next.EjectionStatus &&
-                    el.stack == next.RestraintSystemUsed
-                );
-                data.data.push({
-                  y: parseInt(next.NumberOfPeople),
-                  name: next.AgeGroup,
-                });
-              } else {
+          .then((result) => result.text())
+          .then((text) =>
+            Papa.parse(text, { header: true, skipEmptyLines: true })
+          )
+          .then((parsedData) => {
+            parsedData.data.sort((a, b) =>
+              b.EjectionStatus.localeCompare(a.EjectionStatus)
+            );
+            const drilldowns = parsedData.data.reduce((combined, next) => {
+              if (!!combined[next.drilldown]) {
                 if (
                   combined[next.drilldown].some(
-                    (el) => el.stack == next.RestraintSystemUsed
+                    (el) =>
+                      el.name == next.EjectionStatus &&
+                      el.stack == next.RestraintSystemUsed
                   )
                 ) {
-                  const series = combined[next.drilldown].find(
-                    (el) => el.stack == next.RestraintSystemUsed
+                  const data = combined[next.drilldown].find(
+                    (el) =>
+                      el.name == next.EjectionStatus &&
+                      el.stack == next.RestraintSystemUsed
                   );
-                  combined[next.drilldown].push({
-                    name: next.EjectionStatus,
-                    stack: next.RestraintSystemUsed,
-                    borderColor: stackColorMap[next.RestraintSystemUsed],
-                    borderWidth: 0.5,
-                    linkedTo: series.id,
-                    color:
-                      next.EjectionStatus == "Ejected"
-                        ? "white"
-                        : stackColorMap[next.RestraintSystemUsed],
-                    index: next.EjectionStatus == "Ejected" ? 0 : 1,
-                    data: [
-                      {
-                        y: parseInt(next.NumberOfPeople),
-                        name: next.AgeGroup,
-                      },
-                    ],
-                    xAxis: 1,
+                  data.data.push({
+                    y: parseInt(next.NumberOfPeople),
+                    name: next.AgeGroup,
                   });
                 } else {
-                  combined[next.drilldown].push({
-                    id: `${index}`,
+                  if (
+                    combined[next.drilldown].some(
+                      (el) => el.stack == next.RestraintSystemUsed
+                    )
+                  ) {
+                    const series = combined[next.drilldown].find(
+                      (el) => el.stack == next.RestraintSystemUsed
+                    );
+                    combined[next.drilldown].push({
+                      name: next.EjectionStatus,
+                      stack: next.RestraintSystemUsed,
+                      borderColor: stackColorMap[next.RestraintSystemUsed],
+                      borderWidth: 0.5,
+                      linkedTo: series.id,
+                      color:
+                        next.EjectionStatus == "Ejected"
+                          ? ejectedColor
+                          : stackColorMap[next.RestraintSystemUsed],
+                      index: next.EjectionStatus == "Ejected" ? 0 : 1,
+                      data: [
+                        {
+                          y: parseInt(next.NumberOfPeople),
+                          name: next.AgeGroup,
+                        },
+                      ],
+                      xAxis: 1,
+                    });
+                  } else {
+                    combined[next.drilldown].push({
+                      id: `${index}`,
+                      name: next.EjectionStatus,
+                      stack: next.RestraintSystemUsed,
+                      borderColor: stackColorMap[next.RestraintSystemUsed],
+                      borderWidth: 0.5,
+                      color:
+                        next.EjectionStatus == "Ejected"
+                          ? ejectedColor
+                          : stackColorMap[next.RestraintSystemUsed],
+                      index: next.EjectionStatus == "Ejected" ? 0 : 1,
+                      data: [
+                        {
+                          y: parseInt(next.NumberOfPeople),
+                          name: next.AgeGroup,
+                        },
+                      ],
+                      xAxis: 1,
+                    });
+                    index++;
+                  }
+                }
+              } else {
+                combined[next.drilldown] = [
+                  {
                     name: next.EjectionStatus,
                     stack: next.RestraintSystemUsed,
+                    id: `${index}`,
                     borderColor: stackColorMap[next.RestraintSystemUsed],
                     borderWidth: 0.5,
                     color:
                       next.EjectionStatus == "Ejected"
-                        ? "white"
+                        ? ejectedColor
                         : stackColorMap[next.RestraintSystemUsed],
                     index: next.EjectionStatus == "Ejected" ? 0 : 1,
                     data: [
@@ -103,156 +231,138 @@
                       },
                     ],
                     xAxis: 1,
-                  });
-                  index++;
-                }
+                  },
+                ];
+                index++;
               }
-            } else {
-              combined[next.drilldown] = [
-                {
-                  name: next.EjectionStatus,
-                  stack: next.RestraintSystemUsed,
-                  id: `${index}`,
-                  borderColor: stackColorMap[next.RestraintSystemUsed],
-                  borderWidth: 0.5,
-                  color:
-                    next.EjectionStatus == "Ejected"
-                      ? "white"
-                      : stackColorMap[next.RestraintSystemUsed],
-                  index: next.EjectionStatus == "Ejected" ? 0 : 1,
+              return combined;
+            }, {});
+
+            console.log("Drilldown Data", drilldowns);
+            return drilldowns;
+          });
+
+        const seriesPromise = fetch(
+          `https://s3.amazonaws.com/datastore.portfolio.sampastoriza.com/visualization_data/grouped_person_series_data_${chartConfig.century}_century.csv`
+        )
+          .then((result) => result.text())
+          .then((text) =>
+            Papa.parse(text, { header: true, skipEmptyLines: true })
+          )
+          .then((parsedData) => {
+            const seriesData = parsedData.data.reduce((combined, next) => {
+              if (combined.some((el) => el.name == next.SeverityOfInjury)) {
+                const injuryData = combined.find(
+                  (el) => el.name == next.SeverityOfInjury
+                );
+                injuryData.data.push({
+                  y: parseInt(next.NumberOfPeople),
+                  name: next.SeatingPosition,
+                  drilldown: next.drilldown,
+                });
+              } else {
+                combined.push({
+                  name: next.SeverityOfInjury,
+                  stack: next.SeverityOfInjury,
                   data: [
                     {
                       y: parseInt(next.NumberOfPeople),
-                      name: next.AgeGroup,
+                      name: next.SeatingPosition,
+                      drilldown: next.drilldown,
                     },
                   ],
-                  xAxis: 1,
-                },
-              ];
-              index++;
-            }
-            return combined;
-          }, {});
+                });
+              }
+              return combined;
+            }, []);
 
-          console.log("Drilldown Data", drilldowns);
-          return drilldowns;
-        });
-
-      const seriesPromise = fetch(
-        `https://s3.amazonaws.com/datastore.portfolio.sampastoriza.com/viz_data/vehicle_series_data_${century}.csv`
-      )
-        .then((result) => result.text())
-        .then((text) =>
-          Papa.parse(text, { header: true, skipEmptyLines: true })
-        )
-        .then((parsedData) => {
-          const seriesData = parsedData.data.reduce((combined, next) => {
-            if (combined.some((el) => el.name == next.SeverityOfInjury)) {
-              const injuryData = combined.find(
-                (el) => el.name == next.SeverityOfInjury
-              );
-              injuryData.data.push({
-                y: parseInt(next.NumberOfPeople),
-                name: next.SeatingPosition,
-                drilldown: next.drilldown,
-              });
-            } else {
-              combined.push({
-                name: next.SeverityOfInjury,
-                stack: next.SeverityOfInjury,
-                data: [
-                  {
-                    y: parseInt(next.NumberOfPeople),
-                    name: next.SeatingPosition,
-                    drilldown: next.drilldown,
-                  },
-                ],
-              });
-            }
-            return combined;
-          }, []);
-
-          console.log("series data", seriesData);
-          return seriesData;
-        });
-
-      Promise.all([drilldownPromise, seriesPromise]).then(
-        ([drilldowns, seriesData]) => {
-          Highcharts.setOptions({
-            lang: {
-              thousandsSep: ",",
-            },
+            console.log("series data", seriesData);
+            return seriesData;
           });
-          Highcharts.chart("container", {
-            chart: {
-              type: "column",
-              zoomType: "x",
-              events: {
-                drilldown: function (e) {
-                  if (!e.seriesOptions) {
-                    const chart = this;
-                    const seriesList = drilldowns[e.point.drilldown];
-                    for (let series of seriesList) {
-                      chart.addSingleSeriesAsDrilldown(e.point, series);
+
+        Promise.all([drilldownPromise, seriesPromise]).then(
+          ([drilldowns, seriesData]) => {
+            Highcharts.setOptions({
+              lang: {
+                thousandsSep: ",",
+              },
+            });
+            Highcharts.chart(chartConfig.containerId, {
+              chart: {
+                type: "column",
+                zoomType: "x",
+                events: {
+                  drilldown: function (e) {
+                    if (!e.seriesOptions) {
+                      const chart = this;
+                      const seriesList = drilldowns[e.point.drilldown];
+                      for (let series of seriesList) {
+                        chart.addSingleSeriesAsDrilldown(e.point, series);
+                      }
+                      chart.applyDrilldown();
+                      chart.legend.title.attr({
+                        text: "Restraint System Used",
+                      });
                     }
-                    chart.applyDrilldown();
-                    console.log("chart", chart);
-                    chart.legend.title.attr({ text: "Restraint System Used" });
-                  }
-                },
-                drillup: function (e) {
-                  const chart = this;
-                  chart.legend.title.attr({ text: "Injury Status" });
+                  },
+                  drillup: function (e) {
+                    const chart = this;
+                    chart.legend.title.attr({ text: "Injury Status" });
+                  },
                 },
               },
-            },
-            title: {
-              text: `Locations of Passengers vs Severity of Injury (${century}th Century)`,
-            },
-            xAxis: [
-              {
-                type: "category",
-                categories: ["Driver", "Passenger", "Back Seat"],
-                min: 0,
-              },
-              {
-                type: "category",
-                categories: [
-                  "Child (0-12)",
-                  "Teen (13-19)",
-                  "Young Adult (20-35)",
-                  "Adult (35-60)",
-                  "Senior (60+)",
-                ],
-                min: 0,
-              },
-            ],
-            legend: {
-              align: "right",
-              verticalAlign: "top",
-              layout: "vertical",
-              x: 0,
-              y: 100,
               title: {
-                text: "Injury Status",
+                text: chartConfig.chartTitle,
               },
-              labelFormatter: function () {
-                return this.userOptions.stack;
-              },
-            },
-            plotOptions: {
-              series: {
-                borderWidth: 0,
-                dataLabels: {
-                  enabled: true,
+              xAxis: [
+                {
+                  type: "category",
+                  categories: ["Driver", "Passenger", "Back Seat"],
+                  min: 0,
                 },
-                stacking: "normal",
+                {
+                  type: "category",
+                  categories: [
+                    "Child (0-12)",
+                    "Teen (13-19)",
+                    "Young Adult (20-35)",
+                    "Adult (35-60)",
+                    "Senior (60+)",
+                  ],
+                  min: 0,
+                },
+              ],
+              legend: {
+                align: "right",
+                verticalAlign: "top",
+                layout: "vertical",
+                x: 0,
+                y: 100,
+                title: {
+                  text: "Injury Status",
+                },
+                labelFormatter: function () {
+                  return this.userOptions.stack;
+                },
               },
-            },
-            series: seriesData,
-          });
-        }
-      );
+              plotOptions: {
+                series: {
+                  borderWidth: 0,
+                  dataLabels: {
+                    enabled: true,
+                  },
+                  stacking: "normal",
+                },
+              },
+              series: seriesData,
+            });
+          }
+        );
+      }
+
+      charts.forEach(function (c) {
+        createChart(c);
+      });
     </script>
   </body>
 </html>

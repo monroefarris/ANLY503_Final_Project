@@ -9,3 +9,4 @@ cleaned-*.csv
 combined-data.csv
 .DS_Store
 data/
+visualization_data/
